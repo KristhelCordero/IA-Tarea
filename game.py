@@ -1,4 +1,7 @@
+import agent
 import random
+
+# TODO include score calculation for the agent to use in the genetic algorithm functions
 
 #Colores for terminal output ------------------------------------
 ESC = '\x1b'
@@ -77,7 +80,7 @@ def combine(neighboors, selected, board):
     suma += board[i][j][1]
     color = board[i][j][0]
     board[i][j] = (color, suma)  # Update the selected cell with the combined value
-    return
+    return 
 
 def evaluateNeighbors(board, cell):
     #revisar si hay 2 o más vecinos con el mismo color, si es así combinar en una sola celda sumando el valor de todasy vaciar las otras
@@ -108,7 +111,7 @@ def action(tile, cell, board):
     evaluateNeighbors(board, cell) # Evaluate neighbors to check for combinations
     return board
 
-def IsWin(board, tiles):
+def isWin(tiles):
     # TODO: La partida termina con victoria cuando se colocan las M fichas de la secuencia. Termina con derrota cuando
     # queda al menos una ficha pendiente y el tablero no tiene ninguna celda vacía.
     if tiles == []:
@@ -131,6 +134,9 @@ def main():
         printBoard(board)
         if len(tiles) == 0:
             break
+        if isBoardFull(board):
+            print("The board is full. Cannot place any more tiles.")
+            break
         tile = tiles.pop(0)
         while True: # Ensure the selected cell is empty
             i = random.randint(0, 3)
@@ -138,12 +144,14 @@ def main():
             cell = [i,j]
             if board[i][j][0] == 0 and board[i][j][1] == 0: # Check if the cell is empty
                 break
-        if isBoardFull(board):
-            print("The board is full. Cannot place any more tiles.")
-            break
+        
         print(f"Placing tile {tile} at cell {cell}")
         solution.append(cell)
         board = action(tile, cell, board)
+    if (isWin(tiles)):
+        print("You win!")
+    else:
+        print("You lose!")
     writeSolution("solution.txt", solution, board)
 
 main()
