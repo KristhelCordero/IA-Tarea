@@ -1,4 +1,4 @@
-import agent
+import src.agent
 import random
 
 # TODO include score calculation for the agent to use in the genetic algorithm functions
@@ -98,7 +98,7 @@ def evaluateNeighbors(board, cell):
                 if j < len(board[i])-1 and board[i][j+1][0] == board[i][j][0]: # Check right color
                     neighbors.append((i, j+1))
                 
-                if len(neighbors) >= 1:
+                if len(neighbors) >= 2:
                     # Combine tiles
                     combine(neighbors, cell, board)
     return board
