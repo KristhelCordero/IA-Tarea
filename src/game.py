@@ -1,4 +1,4 @@
-import src.agent
+import agent
 import random
 
 # TODO include score calculation for the agent to use in the genetic algorithm functions
@@ -15,6 +15,7 @@ colors = [
     "\033[37m", # White
     "\033[0m" # Reset
 ]
+# We need to add more colors or something
 
 #---------------------------------------------------------------
 
@@ -22,11 +23,20 @@ def readFile(path):
     with open(path, 'r') as file:
         return file.read()
 
-def validateFile(path):
-    # Implement validation logic to ensure the file format is correct
-    # For example, check if the first line contains two integers (n and k)
-    # and subsequent lines contain valid tile definitions
-    pass
+def isFileValid(path):
+    nk, cant, tiles = processFile(path) 
+    if nk is None:
+        return False, 0, 0, 0
+    if len(nk) != 2 or not isinstance(nk[0], int) or not isinstance(nk[1], int):
+        return False, 0, 0, 0
+    if nk[0] <= 0 or cant[0] <= 0:
+        return False, 0, 0, 0
+    if cant[0] != len(tiles):
+        return False, 0, 0, 0
+    for tile in tiles:
+        if len(tile) != 2 or not isinstance(tile[0], int) or not isinstance(tile[1], int):
+            return False, 0, 0, 0
+    return True, nk, cant, tiles
 
 def writeSolution(path, solution, board):
     index = 0
@@ -41,19 +51,22 @@ def writeSolution(path, solution, board):
 
 
 def processFile(path):
-    # Read the file and process its content to extract the board size, length, and tiles
-    # TODO: Include validation to ensure the file format is correct and handle any potential errors
-    # validateFile(path)
     content = readFile(path)
     tiles = []
     for line in content.splitlines():
         if line.startswith('#') or line.strip() == '':
             continue
         else:
-            if line[2:].strip() != '':
-                tiles.append((int(line[0]), int(line[2:].strip()))) # (Color, value), that's the order of the tiles in the file
+            list = line.split(' ')
+            for i in list:
+                if not i.isdigit():
+                    return None, 0, [] # Invalid file, contains non-integer values
+            if len(list) > 1:
+                tiles.append((int(list[0]), int(list[1]))) # (Color, value), that's the order of the tiles in the file
             else:
-                tiles.append((int(line[0]), 0)) 
+                tiles.append((int(list[0]), 0))
+    if len(tiles) < 2:
+        return None, 0, [] # Invalid file, not enough tiles 
     return tiles[0], tiles[1], tiles[2:] # Return nk, cant tiles, and tiles list
 
 def createBoard(n):
@@ -83,37 +96,31 @@ def combine(neighboors, selected, board):
     return 
 
 def evaluateNeighbors(board, cell):
-    #revisar si hay 2 o más vecinos con el mismo color, si es así combinar en una sola celda sumando el valor de todasy vaciar las otras
-    for i in range(len(board)):
-        for j in range(len(board[i])):
-            if [i,j] == cell:
-                # Check neighbors
-                neighbors = []
-                if i > 0 and board[i-1][j][0] == board[i][j][0]: # Check above color
-                    neighbors.append((i-1, j))
-                if i < len(board)-1 and board[i+1][j][0] == board[i][j][0]: # Check below color
-                    neighbors.append((i+1, j))
-                if j > 0 and board[i][j-1][0] == board[i][j][0]: # Check left color
-                    neighbors.append((i, j-1))
-                if j < len(board[i])-1 and board[i][j+1][0] == board[i][j][0]: # Check right color
-                    neighbors.append((i, j+1))
-                
-                if len(neighbors) >= 2:
-                    # Combine tiles
-                    combine(neighbors, cell, board)
+    [i,j] = cell
+    
+    neighbors = []
+
+    if i > 0 and board[i-1][j][0] != 0 and board[i-1][j][0] == board[i][j][0]: # Check above color
+        neighbors.append((i-1, j))
+    if i < len(board)-1 and board[i-1][j][0] != 0 and board[i+1][j][0] == board[i][j][0]: # Check below color
+        neighbors.append((i+1, j))
+    if j > 0 and board[i-1][j][0] != 0 and board[i][j-1][0] == board[i][j][0]: # Check left color
+        neighbors.append((i, j-1))
+    if j < len(board[i])-1 and board[i-1][j][0] != 0 and board[i][j+1][0] == board[i][j][0]: # Check right color
+        neighbors.append((i, j+1))
+    
+    if len(neighbors) > 0: #Si se aumenta este número, no se combinan bien los tiles, se tendría que cambiar la lógica de combinación
+        # Combine tiles
+        combine(neighbors, cell, board)
     return board
 
 def action(tile, cell, board):
-    for i in range(len(board)):
-        for j in range(len(board[i])):
-            if [i,j] == cell:
-                board[i][j] = tile # Place the tile in the selected cell
+    [i,j] = cell
+    board[i][j] = tile # Place the tile in the selected cell
     evaluateNeighbors(board, cell) # Evaluate neighbors to check for combinations
     return board
 
 def isWin(tiles):
-    # TODO: La partida termina con victoria cuando se colocan las M fichas de la secuencia. Termina con derrota cuando
-    # queda al menos una ficha pendiente y el tablero no tiene ninguna celda vacía.
     if tiles == []:
         return True # Win condition: all tiles placed
     return False # Not win condition: tiles still remaining
@@ -126,7 +133,10 @@ def isBoardFull(board):
     return True
 
 def main():
-    nk, amount, tiles = processFile('instancia_01.txt')
+    isValid, nk, amount, tiles = isFileValid('..\\entradas\\instancia_01.txt')
+    if isValid == False:
+        print("Invalid file format. Please check the input file.")
+        return
     board=createBoard(nk[0])
     solution=[]
     while True:
@@ -148,10 +158,11 @@ def main():
         print(f"Placing tile {tile} at cell {cell}")
         solution.append(cell)
         board = action(tile, cell, board)
+    writeSolution("..\\salidas\\solution.txt", solution, board)
     if (isWin(tiles)):
         print("You win!")
-    else:
-        print("You lose!")
-    writeSolution("solution.txt", solution, board)
+        return 100
+    print("You lose!")
+    return 0
 
 main()
