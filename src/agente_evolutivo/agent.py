@@ -1,26 +1,21 @@
-import random
+import sys
+import os
 
-population_size = 100
-generations = 20
-mutation_rate = 1
+sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 
-## Genetic Algorithm functions
-# This agent must play the game trying to place the tiles in the board to maximize the score we defined
+from game import createBoard
 
-def selection(population):
-    pass
+n = 5
+cromo_prueba = [5, 0, 4, 3, 1]
+fichas = [(1,2), (4,2), (1,4), (6,9), (3,2)]
 
-def crossover(parent1, parent2):
-    pass
-
-def mutation(chromosome):
-    pass
-
-def fitness(solution, score):
-    pass
-
-def createInitialPopulation(populationSize, ):
-    pass
+class Individuo:
+    cromosoma: list[int]
+    aptitud: int
 
 
+def decodificar(cromosoma, n, fichas):
+    tablero = createBoard(5)
+    print(tablero)
 
+decodificar()

@@ -1,4 +1,3 @@
-import agent
 import random
 
 # TODO include score calculation for the agent to use in the genetic algorithm functions
@@ -165,4 +164,5 @@ def main():
     print("You lose!")
     return 0
 
-main()
+if __name__ == "__main__":
+    main()
