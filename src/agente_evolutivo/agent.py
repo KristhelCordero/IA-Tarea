@@ -1,21 +1,53 @@
 import sys
 import os
+from dataclasses import dataclass
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 
-from game import createBoard
+from game import createBoard, action
 
 n = 5
 cromo_prueba = [5, 0, 4, 3, 1]
 fichas = [(1,2), (4,2), (1,4), (6,9), (3,2)]
 
+@dataclass
 class Individuo:
     cromosoma: list[int]
     aptitud: int
 
+@dataclass
+class Resultado:
+    colocaciones: list[tuple[int, int]]  # (fila, col) por ficha, en orden
+    colocadas: int                       # == len(colocaciones)
+    ocupadas: int
+    mayor: int
+
+
+def celdas_vacias(tablero):
+    """Celdas libres del tablero, en orden row-major (por fila, luego por columna).
+
+    El orden es canónico y determinista: la decodificación indexa sobre esta
+    lista, así que si el orden variara entre ejecuciones el agente dejaría de
+    ser reproducible con la misma semilla.
+    """
+    return [(i, j)
+            for i, fila in enumerate(tablero)
+            for j, celda in enumerate(fila)
+            if celda[0] == 0]
+
 
 def decodificar(cromosoma, n, fichas):
-    tablero = createBoard(5)
-    print(tablero)
+    tablero = createBoard(n)
+    colocaciones = []
+    for i, ficha in enumerate(fichas):
+        vacias = celdas_vacias(tablero)
+        # Verificar si vacias esta vacia, si es asi, entonces perdimos
+        if (len(vacias) == 0): break
+        elegida = vacias[cromosoma[i] % len(vacias)]
+        tablero = action(ficha, elegida, tablero)
+        colocaciones.append(elegida)
+    
+    ocupadas = sum(1 for row in tablero for cell in row if cell[0] != 0)
+    mayor = max(cell[1] for row in tablero for cell in row)
 
-decodificar()
+    return Resultado(colocaciones = colocaciones, colocadas = len(colocaciones), ocupadas = ocupadas, mayor = mayor)
