@@ -1,6 +1,7 @@
 import sys
 import os
 from dataclasses import dataclass
+import random
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 
@@ -22,7 +23,6 @@ class Resultado:
     ocupadas: int
     mayor: int
 
-
 def celdas_vacias(tablero):
     """Celdas libres del tablero, en orden row-major (por fila, luego por columna).
 
@@ -34,7 +34,6 @@ def celdas_vacias(tablero):
             for i, fila in enumerate(tablero)
             for j, celda in enumerate(fila)
             if celda[0] == 0]
-
 
 def decodificar(cromosoma, n, fichas):
     tablero = createBoard(n)
@@ -51,3 +50,21 @@ def decodificar(cromosoma, n, fichas):
     mayor = max(cell[1] for row in tablero for cell in row)
 
     return Resultado(colocaciones = colocaciones, colocadas = len(colocaciones), ocupadas = ocupadas, mayor = mayor)
+
+def aptitud(resultado, n):
+    return resultado.colocadas * (n*n + 1) - resultado.ocupadas
+
+def crear_cromosoma(rng, m, n):
+    cromosoma = []
+    for _ in range(m):
+        cromosoma.append(rng.randint(0, n*n - 1))
+    return cromosoma
+
+def busqueda_aleatoria(n, fichas, rng, num_muestras):
+    if (num_muestras <= 0): return None
+    individuos = []
+    for _ in range(num_muestras):
+        cromosoma = crear_cromosoma(rng, len(fichas), n)
+        apt = aptitud(decodificar(cromosoma, n, fichas), n)
+        individuos.append(Individuo(cromosoma = cromosoma, aptitud = apt))
+    return max(individuos, key=lambda i: i.aptitud)
