@@ -68,3 +68,33 @@ def busqueda_aleatoria(n, fichas, rng, num_muestras):
         apt = aptitud(decodificar(cromosoma, n, fichas), n)
         individuos.append(Individuo(cromosoma = cromosoma, aptitud = apt))
     return max(individuos, key=lambda i: i.aptitud)
+
+def crear_poblacion_inicial(rng, tam_poblacion, n, fichas):
+    if (tam_poblacion <= 0): return None
+    poblacion = []
+    for _ in range(tam_poblacion):
+        cromosoma = crear_cromosoma(rng, len(fichas), n)
+        apt = aptitud(decodificar(cromosoma, n, fichas), n)
+        poblacion.append(Individuo(cromosoma = cromosoma, aptitud = apt))
+    return poblacion
+
+def seleccion_torneo(poblacion, k, rng):
+    # Seleccion con reemplazo de la poblacion
+    indices = []
+    seleccionados = []
+    for _ in range(k):
+        indices.append(rng.randint(0, len(poblacion) - 1))
+    for i in indices:
+        seleccionados.append(poblacion[i])
+    return max(seleccionados, key=lambda i: i.aptitud)
+
+def cruce_un_punto(cromosoma_padre1, cromosoma_padre2, rng):
+    punto_corte = rng.randint(1, len(cromosoma_padre1) - 1)
+    return (cromosoma_padre1[:punto_corte]+cromosoma_padre2[punto_corte:], cromosoma_padre2[:punto_corte]+cromosoma_padre1[punto_corte:])
+
+def mutacion(cromosoma, tasa, n, rng):
+    copia_cromosoma = list(cromosoma)
+    for i, gen in enumerate(copia_cromosoma):
+        if (rng.random() < tasa):
+            copia_cromosoma[i] = rng.randint(0, n*n - 1)
+    return copia_cromosoma
