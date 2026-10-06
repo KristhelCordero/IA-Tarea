@@ -98,3 +98,39 @@ def mutacion(cromosoma, tasa, n, rng):
         if (rng.random() < tasa):
             copia_cromosoma[i] = rng.randint(0, n*n - 1)
     return copia_cromosoma
+
+def reemplazo(poblacion, hijos, tam_elite):
+    poblacion.sort(key=lambda i: i.aptitud, reverse=True)
+    reemplazo = poblacion[:tam_elite] + hijos
+    if (len(reemplazo) > len(poblacion)): reemplazo = reemplazo[:len(poblacion)]
+    return reemplazo
+
+def evolucionar(n, fichas, rng, params):
+    poblacion = crear_poblacion_inicial(rng, params.tam_poblacion, n, fichas)
+    mejor = max(poblacion, key=lambda i: i.aptitud)
+    sin_mejora = 0
+    while True:
+        hijos = []
+        i = 0
+        while (len(hijos) < len(poblacion)):
+            padre1 = seleccion_torneo(poblacion, params.k, rng)
+            padre2 = seleccion_torneo(poblacion, params.k, rng)
+            if (rng.random() < params.prob_cruce):
+                cromo1, cromo2 = cruce_un_punto(padre1.cromosoma, padre2.cromosoma, rng)
+            else:
+                cromo1 = padre1.cromosoma
+                cromo2 = padre2.cromosoma
+            cromo1 = mutacion(cromo1, params.tasa, n, rng)
+            cromo2 = mutacion(cromo2, params.tasa, n, rng)
+            # Obtener la aptitud
+            hijos.append(Individuo(cromosoma = cromo1, aptitud = aptitud(decodificar(cromo1, n, fichas), n)))
+            hijos.append(Individuo(cromosoma = cromo2, aptitud = aptitud(decodificar(cromo2, n, fichas), n)))
+        poblacion = reemplazo(poblacion, hijos, params.tam_elite)
+        nuevo_mejor = max(poblacion, key=lambda i: i.aptitud)
+        if (nuevo_mejor.aptitud > mejor.aptitud):
+            mejor = nuevo_mejor
+        else:
+            sin_mejora += 1
+        # Definir condicion de parada
+    
+    return mejor
