@@ -2,6 +2,7 @@ import sys
 import os
 from dataclasses import dataclass
 import random
+import time
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 
@@ -22,6 +23,25 @@ class Resultado:
     colocadas: int                       # == len(colocaciones)
     ocupadas: int
     mayor: int
+
+@dataclass
+class Params:
+    tam_poblacion: int = 100
+    tam_elite: int = 2
+    k: int = 3                   # tamano del torneo: controla la presion selectiva
+    prob_cruce: float = 0.8
+    tasa: float = None           # None -> 1/M, una mutacion por cromosoma en promedio
+    max_generaciones: int = 300
+    max_sin_mejora: int = 60     # por encima del mayor intervalo entre mejoras medido (46)
+    limite_seg: float = 10.0
+
+@dataclass
+class Metricas:
+    evaluaciones: int            # medida de esfuerzo del algoritmo
+    generaciones: int
+    tiempo: float                # segundos
+    motivo_paro: str             # "generaciones" | "tiempo" | "estancamiento"
+    curva: list[int]             # mejor aptitud al cierre de cada generacion
 
 def celdas_vacias(tablero):
     """Celdas libres del tablero, en orden row-major (por fila, luego por columna).
@@ -106,10 +126,29 @@ def reemplazo(poblacion, hijos, tam_elite):
     return reemplazo
 
 def evolucionar(n, fichas, rng, params):
+    inicio = time.monotonic()
+    vencimiento = inicio + params.limite_seg
+    tasa = params.tasa if params.tasa is not None else 1 / len(fichas)
+
     poblacion = crear_poblacion_inicial(rng, params.tam_poblacion, n, fichas)
+    evaluaciones = params.tam_poblacion
     mejor = max(poblacion, key=lambda i: i.aptitud)
+    curva = [mejor.aptitud]
     sin_mejora = 0
+    generaciones = 0
+
     while True:
+        # Los tres criterios van por separado para poder informar cual fue el que corto
+        if (generaciones >= params.max_generaciones):
+            motivo_paro = "generaciones"
+            break
+        if (time.monotonic() >= vencimiento):
+            motivo_paro = "tiempo"
+            break
+        if (sin_mejora >= params.max_sin_mejora):
+            motivo_paro = "estancamiento"
+            break
+
         hijos = []
         while (len(hijos) < len(poblacion) - params.tam_elite):
             padre1 = seleccion_torneo(poblacion, params.k, rng)
@@ -119,18 +158,23 @@ def evolucionar(n, fichas, rng, params):
             else:
                 cromo1 = padre1.cromosoma
                 cromo2 = padre2.cromosoma
-            cromo1 = mutacion(cromo1, params.tasa, n, rng)
-            cromo2 = mutacion(cromo2, params.tasa, n, rng)
+            cromo1 = mutacion(cromo1, tasa, n, rng)
+            cromo2 = mutacion(cromo2, tasa, n, rng)
             # Obtener la aptitud
             hijos.append(Individuo(cromosoma = cromo1, aptitud = aptitud(decodificar(cromo1, n, fichas), n)))
             hijos.append(Individuo(cromosoma = cromo2, aptitud = aptitud(decodificar(cromo2, n, fichas), n)))
+            evaluaciones += 2
+
         poblacion = reemplazo(poblacion, hijos, params.tam_elite)
+        generaciones += 1
+
         nuevo_mejor = max(poblacion, key=lambda i: i.aptitud)
         if (nuevo_mejor.aptitud > mejor.aptitud):
             mejor = nuevo_mejor
             sin_mejora = 0
         else:
             sin_mejora += 1
-        # Definir condicion de parada
-    
-    return mejor
+        curva.append(mejor.aptitud)
+
+    metricas = Metricas(evaluaciones = evaluaciones, generaciones = generaciones, tiempo = time.monotonic() - inicio, motivo_paro = motivo_paro, curva = curva)
+    return mejor, metricas
