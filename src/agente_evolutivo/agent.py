@@ -3,10 +3,11 @@ import os
 from dataclasses import dataclass, replace
 import random
 import time
+import statistics
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 
-from game import createBoard, action
+from game import createBoard, action, isFileValid
 
 RAIZ = os.path.join(os.path.dirname(__file__), '..', '..')
 
@@ -227,3 +228,139 @@ def resolver(n, k, fichas, rng, limite_seg, path_salida = None, params = None):
     escribir_solucion(path_salida, resultado)
     informar_metricas(resultado, metricas)
     return resultado, metricas
+
+# ---------------------------------------------------------------------------
+# Banco de pruebas: correr el agente, medir y calibrar parametros.
+# Nada de esto forma parte del agente; es la herramienta de la fase experimental.
+# ---------------------------------------------------------------------------
+
+@dataclass
+class Corrida:
+    semilla: int
+    aptitud: int
+    colocadas: int
+    total_fichas: int
+    ocupadas: int
+    mayor: int
+    evaluaciones: int
+    generaciones: int
+    tiempo: float
+    motivo_paro: str
+
+def cargar_instancia(path):
+    """Lee una instancia y devuelve (n, k, fichas)."""
+    valido, nk, cant, fichas = isFileValid(path)
+    if (not valido): raise ValueError(f"instancia mal formada: {path}")
+    return nk[0], nk[1], fichas
+
+def correr(n, fichas, semilla, params):
+    """Una corrida del AE con una semilla. No escribe archivos, para poder
+    repetirla miles de veces sin tocar salidas/."""
+    mejor, metricas = evolucionar(n, fichas, random.Random(semilla), params)
+    resultado = decodificar(mejor.cromosoma, n, fichas)
+    return Corrida(semilla = semilla,
+                   aptitud = mejor.aptitud,
+                   colocadas = resultado.colocadas,
+                   total_fichas = len(fichas),
+                   ocupadas = resultado.ocupadas,
+                   mayor = resultado.mayor,
+                   evaluaciones = metricas.evaluaciones,
+                   generaciones = metricas.generaciones,
+                   tiempo = metricas.tiempo,
+                   motivo_paro = metricas.motivo_paro)
+
+def resumir(corridas, campo = "aptitud"):
+    """(media, desviacion, minimo, maximo) de un campo a lo largo de las semillas."""
+    valores = [getattr(c, campo) for c in corridas]
+    desv = statistics.stdev(valores) if len(valores) > 1 else 0.0
+    return statistics.mean(valores), desv, min(valores), max(valores)
+
+def experimento(path_instancia, params = None, semillas = (1, 2, 3), verboso = True):
+    """Corre el AE sobre una instancia con varias semillas.
+
+    El enunciado exige reportar los resultados con su dispersion entre semillas,
+    no como un numero unico; por eso el minimo son tres semillas.
+    """
+    if (params is None): params = Params()
+    n, k, fichas = cargar_instancia(path_instancia)
+    corridas = [correr(n, fichas, s, params) for s in semillas]
+
+    if (verboso):
+        print(f"{os.path.basename(path_instancia)}  N={n} K={k} M={len(fichas)}  "
+              f"| poblacion={params.tam_poblacion} elite={params.tam_elite} "
+              f"torneo={params.tam_torneo} cruce={params.prob_cruce} "
+              f"max_gen={params.max_generaciones} max_sin_mejora={params.max_sin_mejora}")
+        print("-" * 86)
+        print(f"{'semilla':>8} {'aptitud':>8} {'colocadas':>11} {'ocupadas':>9} "
+              f"{'mayor':>6} {'evals':>8} {'gen':>5} {'tiempo':>8}  motivo_paro")
+        for c in corridas:
+            print(f"{c.semilla:>8} {c.aptitud:>8} {str(c.colocadas)+'/'+str(c.total_fichas):>11} "
+                  f"{c.ocupadas:>9} {c.mayor:>6} {c.evaluaciones:>8} {c.generaciones:>5} "
+                  f"{c.tiempo:>7.2f}s  {c.motivo_paro}")
+        print("-" * 86)
+        media, desv, mn, mx = resumir(corridas)
+        print(f"  aptitud: media={media:.1f}  desv={desv:.2f}  min={mn}  max={mx}")
+        media_o, desv_o, mn_o, mx_o = resumir(corridas, "ocupadas")
+        print(f"  ocupadas: media={media_o:.1f}  desv={desv_o:.2f}  min={mn_o}  max={mx_o}")
+    return corridas
+
+def barrido(path_instancia, parametro, valores, semillas = (1, 2, 3), params = None):
+    """Varia UN parametro dejando los demas fijos y reporta media y dispersion.
+
+    Este es el 'procedimiento explicito' con el que se justifican los parametros
+    en el informe: no se eligen por intuicion, se eligen midiendo.
+    """
+    if (params is None): params = Params()
+    n, k, fichas = cargar_instancia(path_instancia)
+    print(f"Barrido de '{parametro}' sobre {os.path.basename(path_instancia)} "
+          f"(N={n} K={k} M={len(fichas)}), {len(semillas)} semillas")
+    print("-" * 74)
+    print(f"{parametro:>16} | {'media':>7} {'desv':>6} {'min':>5} {'max':>5} | "
+          f"{'evals':>9} {'tiempo':>8}")
+    tabla = []
+    for v in valores:
+        p = replace(params, **{parametro: v})
+        corridas = [correr(n, fichas, s, p) for s in semillas]
+        media, desv, mn, mx = resumir(corridas)
+        ev = statistics.mean([c.evaluaciones for c in corridas])
+        tt = statistics.mean([c.tiempo for c in corridas])
+        print(f"{str(v):>16} | {media:>7.1f} {desv:>6.2f} {mn:>5} {mx:>5} | "
+              f"{ev:>9.0f} {tt:>7.2f}s")
+        tabla.append((v, media, desv, mn, mx, ev, tt))
+    return tabla
+
+def comparar_con_aleatoria(path_instancia, params = None, semillas = (1, 2, 3)):
+    """Compara el AE contra busqueda aleatoria con el MISMO presupuesto de
+    evaluaciones. Es el control experimental: si el AE no gana, hay un bug."""
+    if (params is None): params = Params()
+    n, k, fichas = cargar_instancia(path_instancia)
+    corridas = [correr(n, fichas, s, params) for s in semillas]
+    presupuesto = int(statistics.mean([c.evaluaciones for c in corridas]))
+    aleatorias = [aptitud(decodificar(busqueda_aleatoria(n, fichas, random.Random(s), presupuesto).cromosoma, n, fichas), n)
+                  for s in semillas]
+    m_ae, d_ae, _, _ = resumir(corridas)
+    d_al = statistics.stdev(aleatorias) if len(aleatorias) > 1 else 0.0
+    print(f"{os.path.basename(path_instancia)}: presupuesto de {presupuesto} evaluaciones, "
+          f"{len(semillas)} semillas")
+    print(f"  aleatoria : media={statistics.mean(aleatorias):.1f}  desv={d_al:.2f}  {aleatorias}")
+    print(f"  evolutivo : media={m_ae:.1f}  desv={d_ae:.2f}  {[c.aptitud for c in corridas]}")
+    return corridas, aleatorias
+
+if __name__ == "__main__":
+    ruta = sys.argv[1] if len(sys.argv) > 1 else os.path.join(RAIZ, "entradas", "instancia_01.txt")
+    params = Params(
+        tam_poblacion = 100,
+        tam_elite = 2,
+        tam_torneo = 3,
+        prob_cruce = 0.8,
+        tasa = None,
+        # Condiciones de parada
+        max_generaciones = 300,
+        max_sin_mejora = 60,
+        limite_seg = 10.0
+    )
+    experimento(ruta, params, semillas = (1, 2, 3, 4, 5))
+    print()
+    comparar_con_aleatoria(ruta)
+
+
