@@ -111,8 +111,7 @@ def evolucionar(n, fichas, rng, params):
     sin_mejora = 0
     while True:
         hijos = []
-        i = 0
-        while (len(hijos) < len(poblacion)):
+        while (len(hijos) < len(poblacion) - params.tam_elite):
             padre1 = seleccion_torneo(poblacion, params.k, rng)
             padre2 = seleccion_torneo(poblacion, params.k, rng)
             if (rng.random() < params.prob_cruce):
@@ -129,6 +128,7 @@ def evolucionar(n, fichas, rng, params):
         nuevo_mejor = max(poblacion, key=lambda i: i.aptitud)
         if (nuevo_mejor.aptitud > mejor.aptitud):
             mejor = nuevo_mejor
+            sin_mejora = 0
         else:
             sin_mejora += 1
         # Definir condicion de parada
