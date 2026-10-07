@@ -1,12 +1,14 @@
 import sys
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import random
 import time
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 
 from game import createBoard, action
+
+RAIZ = os.path.join(os.path.dirname(__file__), '..', '..')
 
 n = 5
 cromo_prueba = [5, 0, 4, 3, 1]
@@ -28,7 +30,7 @@ class Resultado:
 class Params:
     tam_poblacion: int = 100
     tam_elite: int = 2
-    k: int = 3                   # tamano del torneo: controla la presion selectiva
+    tam_torneo: int = 3          # controla la presion selectiva (ojo: NO es el K de la instancia)
     prob_cruce: float = 0.8
     tasa: float = None           # None -> 1/M, una mutacion por cromosoma en promedio
     max_generaciones: int = 300
@@ -151,8 +153,8 @@ def evolucionar(n, fichas, rng, params):
 
         hijos = []
         while (len(hijos) < len(poblacion) - params.tam_elite):
-            padre1 = seleccion_torneo(poblacion, params.k, rng)
-            padre2 = seleccion_torneo(poblacion, params.k, rng)
+            padre1 = seleccion_torneo(poblacion, params.tam_torneo, rng)
+            padre2 = seleccion_torneo(poblacion, params.tam_torneo, rng)
             if (rng.random() < params.prob_cruce):
                 cromo1, cromo2 = cruce_un_punto(padre1.cromosoma, padre2.cromosoma, rng)
             else:
@@ -178,3 +180,50 @@ def evolucionar(n, fichas, rng, params):
 
     metricas = Metricas(evaluaciones = evaluaciones, generaciones = generaciones, tiempo = time.monotonic() - inicio, motivo_paro = motivo_paro, curva = curva)
     return mejor, metricas
+
+def escribir_solucion(path, resultado):
+    """Escribe la solucion en el formato del enunciado: una linea por colocacion
+    con 'indice fila columna', y una linea final de resumen que empieza con #.
+
+    Se escribe igual en derrota, con las colocaciones que alcanzo a realizar
+    (requisito 3 del enunciado).
+    """
+    carpeta = os.path.dirname(path)
+    if (carpeta): os.makedirs(carpeta, exist_ok = True)
+    with open(path, 'w') as archivo:
+        for indice, (fila, columna) in enumerate(resultado.colocaciones):
+            archivo.write(f"{indice} {fila} {columna}\n")
+        archivo.write(f"# colocadas={resultado.colocadas} ocupadas={resultado.ocupadas} mayor={resultado.mayor}\n")
+
+def informar_metricas(resultado, metricas):
+    """Informa por salida estandar lo que pide el requisito 6 del enunciado.
+
+    Formato clave=valor, una por linea, para que la bateria de experimentos de
+    la fase E pueda parsearlo sin trabajo extra.
+    """
+    print(f"colocadas={resultado.colocadas}")
+    print(f"ocupadas={resultado.ocupadas}")
+    print(f"mayor={resultado.mayor}")
+    print(f"tiempo={metricas.tiempo:.3f}")
+    print(f"evaluaciones={metricas.evaluaciones}")
+    print(f"generaciones={metricas.generaciones}")
+    print(f"motivo_paro={metricas.motivo_paro}")
+
+def resolver(n, k, fichas, rng, limite_seg, path_salida = None, params = None):
+    """Punto de entrada del agente evolutivo.
+
+    'k' es la cantidad de colores de la instancia. El AE no la usa (el
+    decodificador no necesita conocerla); esta en la firma para que coincida
+    con la del agente de busqueda y el CLI pueda intercambiarlos.
+    """
+    if (params is None): params = Params()
+    params = replace(params, limite_seg = limite_seg)
+
+    mejor, metricas = evolucionar(n, fichas, rng, params)
+    resultado = decodificar(mejor.cromosoma, n, fichas)
+
+    if (path_salida is None):
+        path_salida = os.path.join(RAIZ, 'salidas', 'solution.txt')
+    escribir_solucion(path_salida, resultado)
+    informar_metricas(resultado, metricas)
+    return resultado, metricas
