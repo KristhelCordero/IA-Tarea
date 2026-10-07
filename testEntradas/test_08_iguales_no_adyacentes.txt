@@ -1,0 +1,6 @@
+# Fichas del mismo color sin contacto ortogonal
+3 2
+3
+1 2
+1 8
+2 5

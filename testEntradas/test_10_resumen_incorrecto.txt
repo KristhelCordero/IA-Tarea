@@ -1,0 +1,5 @@
+# La partida es legal, pero el resumen indica ocupacion incorrecta
+3 2
+2
+1 3
+2 6

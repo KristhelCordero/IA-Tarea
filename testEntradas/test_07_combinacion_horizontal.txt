@@ -1,0 +1,5 @@
+# Fichas iguales colocadas horizontalmente en el borde
+3 2
+2
+1 3
+1 4

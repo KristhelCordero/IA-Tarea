@@ -1,0 +1,5 @@
+# Juego ficticio 6: caso intencionalmente invalido por reutilizar una celda
+2 2
+2
+1 2
+2 3
