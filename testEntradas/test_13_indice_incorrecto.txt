@@ -1,0 +1,5 @@
+# Solucion con indices fuera de la secuencia esperada
+3 2
+2
+1 3
+2 5

@@ -7,7 +7,7 @@ import statistics
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 
-from game import createBoard, action, isFileValid
+from game import createBoard, action, isInputFileValid
 
 RAIZ = os.path.join(os.path.dirname(__file__), '..', '..')
 
@@ -249,7 +249,7 @@ class Corrida:
 
 def cargar_instancia(path):
     """Lee una instancia y devuelve (n, k, fichas)."""
-    valido, nk, cant, fichas = isFileValid(path)
+    valido, nk, cant, fichas = isInputFileValid(path)
     if (not valido): raise ValueError(f"instancia mal formada: {path}")
     return nk[0], nk[1], fichas
 

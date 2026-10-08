@@ -1,10 +1,9 @@
 import random
 
-# TODO include score calculation for the agent to use in the genetic algorithm functions
-
 #Colores for terminal output ------------------------------------
 ESC = '\x1b'
 colors = [
+    "",
     "\033[31m", # Red
     "\033[32m", # Green
     "\033[33m", # Yellow
@@ -14,7 +13,7 @@ colors = [
     "\033[37m", # White
     "\033[0m" # Reset
 ]
-# We need to add more colors or something
+# TODO We need to add more colors or something
 
 #---------------------------------------------------------------
 
@@ -22,20 +21,62 @@ def readFile(path):
     with open(path, 'r') as file:
         return file.read()
 
-def isFileValid(path):
-    nk, cant, tiles = processFile(path) 
+def isInputFileValid(path):
+    try:
+        nk, cant, tiles = processFile(path) # nk = (n, k), cant = (cant,), tiles = [(color, value), ...]
+        # n = number of rows/columns, k = number of colors, cant = number of tiles, tiles = list of tiles with color and value
+    except (OSError, UnicodeError):
+        return False
     if nk is None:
-        return False, 0, 0, 0
-    if len(nk) != 2 or not isinstance(nk[0], int) or not isinstance(nk[1], int):
-        return False, 0, 0, 0
-    if nk[0] <= 0 or cant[0] <= 0:
-        return False, 0, 0, 0
+        print("Invalid file format. Please check the input file.")
+        return False, nk, cant, tiles
+    if nk[0] <= 0 or nk[1] <= 0 or cant[0] <= 0:
+        print("Invalid values for n, k, or cant. They must be positive integers")
+        return False, nk, cant, tiles
     if cant[0] != len(tiles):
-        return False, 0, 0, 0
-    for tile in tiles:
-        if len(tile) != 2 or not isinstance(tile[0], int) or not isinstance(tile[1], int):
-            return False, 0, 0, 0
+        print("The number of tiles does not match the specified count")
+        return False, nk, cant, tiles
+    if any(color < 1 or color > nk[1] for color, _ in tiles):
+        print(f"Invalid color values in tiles. Colors must be between 1 and {nk[1]}")
+        return False, nk, cant, tiles
     return True, nk, cant, tiles
+
+def processFile(path):
+    records = []
+    file = readFile(path)
+    for line in file.splitlines():
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        records.append(line.split())
+
+    # Validate the structure of the records before processing
+    if len(records) < 2 or len(records[0]) != 2 or len(records[1]) != 1: 
+        # Check if there are at least two lines and the first line has two values and the second line has one value
+        # n, k = records[0], cant = records[1]
+        return None, 0, []
+    if any(len(record) != 2 for record in records[2:]): # Check if all subsequent lines have exactly two values
+        return None, 0, []
+
+    try:
+        nk = tuple(int(value) for value in records[0])
+        cant = (int(records[1][0]),)
+        tiles = [tuple(int(value) for value in record) for record in records[2:]]
+    except ValueError:
+        return None, 0, []
+
+    if cant[0] != len(tiles):
+        return None, 0, []
+
+    return nk, cant, tiles
+
+def countOccupiedCells(board):
+    count = 0
+    for row in board:
+        for cell in row:
+            if cell[0] != 0 or cell[1] != 0: # Check if the cell is occupied
+                count += 1
+    return count
 
 def writeSolution(path, solution, board):
     index = 0
@@ -44,29 +85,9 @@ def writeSolution(path, solution, board):
             file.write(f"{index} {line[0]} {line[1]}\n")
             index += 1
         colocadas = len(solution)
-        ocupadas = sum(1 for row in board for cell in row if cell[0] != 0)
+        ocupadas = countOccupiedCells(board)
         mayor = max(cell[1] for row in board for cell in row)
         file.write(f"# colocadas = {colocadas} ocupadas = {ocupadas} mayor = {mayor} \n")
-
-
-def processFile(path):
-    content = readFile(path)
-    tiles = []
-    for line in content.splitlines():
-        if line.startswith('#') or line.strip() == '':
-            continue
-        else:
-            list = line.split(' ')
-            for i in list:
-                if not i.isdigit():
-                    return None, 0, [] # Invalid file, contains non-integer values
-            if len(list) > 1:
-                tiles.append((int(list[0]), int(list[1]))) # (Color, value), that's the order of the tiles in the file
-            else:
-                tiles.append((int(list[0]), 0))
-    if len(tiles) < 2:
-        return None, 0, [] # Invalid file, not enough tiles 
-    return tiles[0], tiles[1], tiles[2:] # Return nk, cant tiles, and tiles list
 
 def createBoard(n):
     board = [[(0,0) for _ in range(n)] for _ in range(n)]
@@ -101,11 +122,11 @@ def evaluateNeighbors(board, cell):
 
     if i > 0 and board[i-1][j][0] != 0 and board[i-1][j][0] == board[i][j][0]: # Check above color
         neighbors.append((i-1, j))
-    if i < len(board)-1 and board[i-1][j][0] != 0 and board[i+1][j][0] == board[i][j][0]: # Check below color
+    if i < len(board)-1 and board[i+1][j][0] != 0 and board[i+1][j][0] == board[i][j][0]: # Check below color
         neighbors.append((i+1, j))
-    if j > 0 and board[i-1][j][0] != 0 and board[i][j-1][0] == board[i][j][0]: # Check left color
+    if j > 0 and board[i][j-1][0] != 0 and board[i][j-1][0] == board[i][j][0]: # Check left color
         neighbors.append((i, j-1))
-    if j < len(board[i])-1 and board[i-1][j][0] != 0 and board[i][j+1][0] == board[i][j][0]: # Check right color
+    if j < len(board[i])-1 and board[i][j+1][0] != 0 and board[i][j+1][0] == board[i][j][0]: # Check right color
         neighbors.append((i, j+1))
     
     if len(neighbors) > 0: #Si se aumenta este número, no se combinan bien los tiles, se tendría que cambiar la lógica de combinación
@@ -132,7 +153,7 @@ def isBoardFull(board):
     return True
 
 def main():
-    isValid, nk, amount, tiles = isFileValid('..\\entradas\\instancia_01.txt')
+    isValid, nk, amount, tiles = isInputFileValid('..\\entradas\\instancia_01.txt')
     if isValid == False:
         print("Invalid file format. Please check the input file.")
         return

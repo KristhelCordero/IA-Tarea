@@ -1,0 +1,5 @@
+# Juego ficticio 5: caso intencionalmente invalido por coordenada fuera del tablero
+2 2
+2
+1 2
+2 3

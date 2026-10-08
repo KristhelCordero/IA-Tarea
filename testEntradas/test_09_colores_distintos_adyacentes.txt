@@ -1,0 +1,5 @@
+# Dos fichas contiguas de colores distintos no se combinan
+3 2
+2
+1 2
+2 8

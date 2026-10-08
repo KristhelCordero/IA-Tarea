@@ -1,0 +1,7 @@
+# Juego ficticio 2: dos fichas del mismo color se combinan
+3 3
+4
+1 2
+1 5
+2 3
+3 8

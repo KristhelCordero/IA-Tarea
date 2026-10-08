@@ -1,0 +1,4 @@
+# La solucion usa una coordenada negativa
+2 2
+1
+1 5
