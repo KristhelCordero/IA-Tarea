@@ -95,7 +95,7 @@ El elitismo garantiza que la mejor aptitud **nunca decrezca** entre generaciones
 Se detiene al cumplirse **cualquiera** de tres condiciones, evaluadas por separado para poder informar cuál fue la que cortó:
 
 | Criterio | Cubre |
-|---|---|
+| --- | --- |
 | `generaciones >= max_generaciones` | Fija un presupuesto de evaluaciones, necesario para que las corridas sean comparables entre máquinas |
 | `tiempo >= limite_seg` | Requisito de la especificación; se mide con `time.monotonic()`, inmune a ajustes del reloj del sistema |
 | `sin_mejora >= max_sin_mejora` | Detiene la ejecución una vez convergida. Dado que el tercer criterio de desempate del concurso es el menor tiempo de cómputo, continuar tras la convergencia solo representa una desventaja |
@@ -103,12 +103,13 @@ Se detiene al cumplirse **cualquiera** de tres condiciones, evaluadas por separa
 El motivo de paro se reporta junto con las métricas, dato indispensable para interpretar los experimentos: un resultado deficiente por agotamiento del tiempo y uno por convergencia prematura exigen correcciones opuestas.
 
 #### Parámetros y procedimiento por el cual se fijaron
+
 *Sujeto a cambios.*
 
 Los valores no se eligieron por intuición. Se fijaron mediante **barridos de un parámetro a la vez**, dejando el resto constante, sobre `instancia_06.txt` (N=8, K=6, M=70) con **5 semillas por configuración**. Se eligió esa instancia porque es la que mejor discrimina: en instancias pequeñas como `instancia_01.txt` la búsqueda aleatoria alcanza resultados casi óptimos y ninguna configuración se distingue de otra.
 
 | Parámetro | Valor | Procedimiento |
-|---|---|---|
+| --- | --- | --- |
 | `tam_poblacion` | 100 | Efecto monótono y dominante (ver tabla). El valor conviene elevarlo tanto como el límite de tiempo permita |
 | `tam_elite` | 2 | 2 % de la población: suficiente para garantizar monotonía sin reducir la renovación |
 | `tam_torneo` | 3 | Sin efecto significativo en el rango 2–8 |
@@ -121,7 +122,7 @@ Los valores no se eligieron por intuición. Se fijaron mediante **barridos de un
 **Tamaño de población.** Es el parámetro de mayor impacto, con efecto monótono:
 
 | `tam_poblacion` | Aptitud media | Desv. | Evaluaciones | Tiempo |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | 50 | 4516.8 | 2.39 | 6 808 | 2.9 s |
 | 100 | 4517.0 | 2.35 | 14 173 | 4.0 s |
 | 200 | 4519.2 | 3.42 | 26 296 | 7.7 s |
@@ -132,7 +133,7 @@ El resultado es coherente con el diagnóstico de que el factor limitante es la *
 **Tasa de mutación.** Confirma la regla habitual de `1/M`, equivalente a mutar un gen por cromosoma en promedio:
 
 | `tasa` | Aptitud media | Desv. |
-|---|---|---|
+| --- | --- | --- |
 | 0.5/M | 4517.6 | 1.52 |
 | **1/M** | **4519.6** | 1.95 |
 | 2/M | 4519.2 | 2.28 |
@@ -143,7 +144,7 @@ La caída en 4/M es el comportamiento esperado: una mutación excesiva destruye 
 **Probabilidad de cruce.** La tendencia favorece valores altos:
 
 | `prob_cruce` | Aptitud media | Desv. |
-|---|---|---|
+| --- | --- | --- |
 | 0.0 (sin cruce) | 4518.4 | 2.61 |
 | 0.5 | 4520.6 | 1.95 |
 | 0.8 | 4519.2 | 3.42 |
@@ -154,14 +155,14 @@ La configuración `0.0` constituye una ablación deliberada: con mutación únic
 **Criterio de estancamiento y tamaño de torneo.** Ninguno de los dos muestra un efecto que supere la dispersión entre semillas:
 
 | `max_sin_mejora` | Media | Desv. | Evaluaciones |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 30 | 4517.6 | 2.88 | 13 664 |
 | 60 | 4519.2 | 3.42 | 26 296 |
 | 150 | 4519.4 | 3.36 | 46 888 |
 | 400 | 4519.4 | 3.36 | 59 600 |
 
 | `tam_torneo` | Media | Desv. |
-|---|---|---|
+| --- | --- | --- |
 | 2 | 4517.4 | 1.14 |
 | 3 | 4519.2 | 3.42 |
 | 5 | 4519.2 | 3.03 |
@@ -174,7 +175,7 @@ Pasar de 60 a 150 generaciones de paciencia mejora la media en 0.2 puntos —muy
 Como control experimental se implementó una búsqueda aleatoria —generar cromosomas al azar y conservar el mejor— que se compara con el agente evolutivo bajo **idéntico presupuesto de evaluaciones**:
 
 | Instancia | Búsqueda aleatoria | Agente evolutivo | Ventaja |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `instancia_01.txt` (N=4, M=24) | 401.3 | 401.0 | ~0 |
 | `instancia_04.txt` (N=6, M=28) | 1023.0 | 1027.0 | +4.0 |
 | `instancia_06.txt` (N=8, M=70) | 4506.3 | 4513.3 | +7.0 |
