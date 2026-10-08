@@ -349,15 +349,15 @@ def comparar_con_aleatoria(path_instancia, params = None, semillas = (1, 2, 3)):
 if __name__ == "__main__":
     ruta = sys.argv[1] if len(sys.argv) > 1 else os.path.join(RAIZ, "entradas", "instancia_01.txt")
     params = Params(
-        tam_poblacion = 100,
+        tam_poblacion = 1000,
         tam_elite = 2,
         tam_torneo = 3,
         prob_cruce = 0.8,
         tasa = None,
         # Condiciones de parada
-        max_generaciones = 300,
-        max_sin_mejora = 60,
-        limite_seg = 10.0
+        max_generaciones = 1000,
+        max_sin_mejora = 1000,
+        limite_seg = 100.0
     )
     experimento(ruta, params, semillas = (1, 2, 3, 4, 5))
     print()
