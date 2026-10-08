@@ -1,7 +1,7 @@
 """Generador de instancias de TileUp parametrizado por N, K, M y semilla.
 
 Uso:
-    python3 src/generador.py <N> <K> <M> <semilla> [salida]
+    python3 src/modulo_adicional/generador_instancias.py <N> <K> <M> <semilla> [salida]
 
 La misma semilla produce siempre la misma instancia, para que los experimentos
 sean reproducibles.
@@ -26,7 +26,7 @@ def escribir(path, n, k, fichas, comentario = ""):
 
 def main():
     if (len(sys.argv) < 5):
-        print("uso: python3 src/generador.py <N> <K> <M> <semilla> [salida]", file = sys.stderr)
+        print("uso: python3 src/modulo_adicional/generador_instancias.py <N> <K> <M> <semilla> [salida]", file = sys.stderr)
         return 1
     n, k, m, semilla = (int(a) for a in sys.argv[1:5])
     if (n <= 0 or k <= 0 or m <= 0):
