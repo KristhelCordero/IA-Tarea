@@ -301,6 +301,57 @@ salidas/instancia_07_AB_S3.txt
 | 6 | evolutivo | 99 | instancia_07 | 110 | 61 | 10.003s | Evaluaciones de aptitud | 10586 |
 | 6 | búsqueda  | 99 | instancia_07 | 110 | 6 | 0.597s | Nodos expandidos | 547 |
 
-## Conclusiones 
+## Conclusiones
 
-TODO
+### Resultado principal
+
+En las 18 corridas (6 configuraciones × 3 semillas) **ambos agentes colocaron siempre la secuencia completa**. El primer criterio del objetivo, maximizar las fichas colocadas, nunca llegó a discriminar: ninguna instancia del conjunto produjo una derrota. Toda la comparación quedó decidida por el segundo criterio, la ocupación final.
+
+Bajo ese criterio, **el agente de búsqueda alcanzó el piso teórico en las seis configuraciones**. Como una solución completa no puede ocupar menos de una celda por color presente en la secuencia, y en cada configuración la ocupación obtenida coincide exactamente con el número de colores, esos resultados no son solo los mejores observados: son demostrablemente óptimos para ambos criterios del objetivo. El agente evolutivo igualó ese piso únicamente en la configuración 2 y en una de las tres semillas de la configuración 4.
+
+| Config. | Instancia | N | K | M | Piso | Evolutivo (3 semillas) | Desv. | Búsqueda | Brecha |
+|---|---|---|---|---|---|---|---|---|---|
+| 2 | instancia_03 | 3 | 2 | 25 | 2 | 2, 2, 2 | 0.00 | **2** | 0.0 |
+| 4 | instancia_05 | 4 | 2 | 26 | 2 | 3, 3, 2 | 0.58 | **2** | 0.7 |
+| 1 | instancia_02 | 5 | 4 | 22 | 4 | 7, 7, 7 | 0.00 | **4** | 3.0 |
+| 3 | instancia_04 | 6 | 3 | 28 | 3 | 8, 10, 7 | 1.53 | **3** | 5.3 |
+| 5 | instancia_06 | 8 | 6 | 70 | 6 | 30, 31, 31 | 0.58 | **6** | 24.7 |
+| 6 | instancia_07 | 10 | 6 | 110 | 6 | 56, 55, 61 | 3.21 | **6** | 51.3 |
+
+### Cómo escala la diferencia
+
+Ordenadas por tamaño de tablero, las configuraciones muestran que **la brecha entre ambos agentes crece de forma monótona con N**: es nula en el tablero de 3×3, llega a 5.3 celdas en el de 6×6 y a 51.3 en el de 10×10. El agente de búsqueda mantiene la calidad óptima en todo el rango, de modo que la degradación observada es enteramente atribuible al agente evolutivo.
+
+La dispersión entre semillas sigue el mismo patron. El agente de búsqueda es determinista y la semilla no altera su salida, por lo que su desviación es cero en todas las configuraciones. La del evolutivo pasa de 0.00 en las instancias pequeñas a 3.21 en la mayor: al crecer el espacio, no solo empeora su resultado medio sino que se vuelve menos predecible.
+
+Conviene señalar que en la configuración 6 el evolutivo se detuvo por límite de tiempo (10.05 s, 10.00 s y 10.00 s contra un tope de 10 s), no por convergencia. En las cinco configuraciones restantes se detuvo por estancamiento. Su resultado en la instancia mayor es, por lo tanto, el mejor alcanzado dentro del presupuesto, no el valor al que habría convergido.
+
+### Interpretación
+
+La explicación más consistente con los datos es que el problema tiene una **estructura secuencial fuerte** que la búsqueda constructiva aprovecha de forma directa y la representación del evolutivo no conserva.
+
+El agente de búsqueda decide una ficha a la vez con el tablero real a la vista: cada sucesor refleja el efecto exacto de una colocación, incluida la fusión, y el orden por ocupación selecciona inmediatamente las jugadas que fusionan. La deduplicación por nivel y el piso teórico como certificado completan el mecanismo.
+
+El evolutivo, en cambio, opera sobre un genotipo cuya interpretación depende del historial completo: el gen de la ficha *i* indexa la lista de celdas libres **en ese instante**, de modo que alterar un gen temprano cambia el significado de todos los posteriores. Esa baja localidad hace que el cruce y la mutacion produzcan descendientes cuyo fenotipo guarda poca relacion con el de sus progenitores, y la recombinación pierde buena parte de su capacidad de combinar material útil. La representación garantiza legalidad sin reparación --su ventaja de diseño-- pero lo hace a costa de la propiedad que un algoritmo genético necesita para explotar soluciones parciales buenas.
+
+### Costo computacional
+
+Las medidas de esfuerzo de ambos agentes no son directamente comparables: una evaluación de aptitud simula una partida completa de M colocaciones, mientras que una expansión de nodo genera a lo sumo N² sucesores de una sola colocación cada uno. Normalizando ambas a colocaciones simuladas, el evolutivo realiza entre **21 y 690 veces más trabajo** que la búsqueda, según la configuración.
+
+Esa relacion es consistente con los tiempos medidos, de 17× a 1039× a favor de la búsqueda. El factor se comprime en las instancias grandes por dos motivos: el costo por nivel del haz crece con N², y el tiempo del evolutivo queda artificialmente acotado por el límite de 10 segundos.
+
+### Una inversión respecto de lo esperado
+
+El planteo de la tarea anticipa que el agente de búsqueda deje de terminar dentro del límite de tiempo al crecer el problema. En este estudio ocurrió lo contrario: la búsqueda resolvió la instancia mayor en 0.6 segundos, mientras que el evolutivo agotó el presupuesto completo.
+
+Esto es consecuencia directa de la elección de algoritmo. Una búsqueda exhaustiva o con garantía de optimalidad --BFS, costo uniforme o A*-- si habría explotado: el árbol tiene del orden de 10¹²⁶ hojas en la instancia de 8×8. La búsqueda por haz renuncia a esa garantía a cambio de un costo acotado por `ancho × celdas × M`, que es polinómico. El resultado es un agente que no solo termina siempre, sino que además alcanzó el óptimo en todos los casos probados; el precio es que no puede certificar optimalidad salvo cuando llega al piso teórico, como ocurrió aquí.
+
+### Limitaciones del estudio
+
+Tres advertencias acotan el alcance de estas conclusiones.
+
+El motor fusiona únicamente los vecinos inmediatos de igual color, no la componente conexa completa descrita en la especificación. Ambos agentes comparten esa misma implementacion, de modo que la comparación entre ellos es válida, pero las ocupaciones absolutas corresponden a esa variante de las reglas.
+
+Ninguna de las instancias produjo una derrota, por lo que el criterio dominante del objetivo quedó sin ejercitar. Determinar cuál agente degrada mejor cuando el tablero se llena requeriría instancias con secuencias construidas de forma adversarial, alternando colores para impedir la formacion de adyacencias; la sola densidad de fichas no basta, porque una celda absorbe sin límite fichas del mismo color.
+
+Por último, los parámetros del evolutivo se fijaron mediante barridos documentados, mientras que la programación de anchos del agente de búsqueda se adoptó sin un barrido equivalente. Dado que la búsqueda ya alcanza el óptimo demostrable en todo el conjunto, afinarla no cambiaría los resultados, pero si podria reducir aún más sus tiempos.
