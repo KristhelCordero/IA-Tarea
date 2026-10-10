@@ -8,6 +8,10 @@ Proyecto de Inteligencia Artificial que compara dos agentes para jugar TileUp: u
 
 2023135405 - Kristhel Cordero Leiva
 
+## Declaración de uso de inteligencia artificial
+
+Se utilizó un asistente de IA mediante Copilot SDK en VS Code como apoyo para diagnosticar y corregir bugs en el código una vez se ha estado intentando por un periodo considerable de tiempo, con el fin de ahorrar tiempo y evitar atrasos, se usó para preparar una base de la documentación, mas no en la justificación de las decisiones técnicas de los agentes. La base de documentación generada fue alterada posteriormente y adaptada al proyecto. La asistencia incluyó propuestas, arreglo de bugs y edición de documentación.
+
 ## TileUp
 
 La instancia define un tablero cuadrado `N × N`, `K` colores y una secuencia de `M` fichas. Cada ficha tiene un color y un valor. Al colocarla en una celda vacía, se combina con las fichas del mismo color que comparten un lado con la celda elegida: sus valores se suman y el resultado queda en la celda elegida. Las demás celdas de la combinación quedan vacías.
