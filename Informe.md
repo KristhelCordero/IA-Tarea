@@ -32,11 +32,9 @@ El piso teórico sirve como certificado solo cuando se colocaron todas las ficha
 
 Cada individuo es un cromosoma de `M` enteros en `[0, N²−1]`. El gen de cada ficha selecciona, por módulo, una celda de la lista de celdas vacías en orden por fila y columna. La decodificación simula la partida en el motor del juego; por ello, cada individuo produce una secuencia de acciones legales hasta colocar todas las fichas o llenar el tablero.
 
-La aptitud es `colocadas × (N² + 1) − ocupadas`, escalarización que conserva exactamente el orden lexicográfico del objetivo. La población inicial es aleatoria; se usa selección por torneo con reemplazo, cruce de un punto y
-mutación por gen. En cada generación se conserva elitistamente a los mejores individuos. Los parámetros por defecto son población 100, élite 2, torneo 3, probabilidad de cruce 0.8, tasa de mutación `1/M`, máximo 300 generaciones y
-60 generaciones sin mejora. Es anytime y su esfuerzo se mide por evaluaciones de aptitud. La implementación y sus detalles adicionales están en `src/agente_evolutivo/agent.py`; la del agente de búsqueda está en `src/searchAgent/searchAgent.py`.
+La aptitud es `colocadas × (N² + 1) − ocupadas`. La población inicial es aleatoria; se usa selección por torneo con reemplazo, cruce de un punto y mutación por gen. En cada generación se conserva elitistamente a los mejores individuos. Los parámetros por defecto son población 100, élite 2, torneo 3, probabilidad de cruce 0.8, tasa de mutación `1/M`, máximo 300 generaciones y 60 generaciones sin mejora. Es anytime y su esfuerzo se mide por evaluaciones de aptitud. La implementación y sus detalles adicionales están en `src/agente_evolutivo/agent.py`; la del agente de búsqueda está en `src/searchAgent/searchAgent.py`.
 
-La representación indirecta evita generar coordenadas ocupadas: cada gen indexa únicamente la lista de celdas libres del tablero actual. No necesita reparar movimientos ilegales, aunque el módulo puede sesgar la frecuencia con que se eligen celdas y un cambio temprano puede alterar la interpretación de los genes posteriores. El orden por fila y columna mantiene determinista la decodificación.
+La representación indirecta evita generar coordenadas ocupadas: cada gen indexa únicamente la lista de celdas libres del  tablero actual. No necesita reparar movimientos ilegales, aunque el módulo puede sesgar la frecuencia con que se eligen celdas y un cambio temprano puede alterar la interpretación de los genes posteriores. El orden por fila y columna mantiene determinista la decodificación.
 
 La escala de aptitud preserva el objetivo porque `0 ≤ ocupadas ≤ N²`. Una ficha colocada adicional aporta `N² + 1`, más que cualquier diferencia posible de ocupación; si las cantidades colocadas son iguales, gana la menor ocupación. El torneo introduce presión selectiva sin requerir probabilidades proporcionales a la aptitud. El cruce intercambia segmentos de decisiones, la mutación reemplaza genes por valores del mismo dominio y el elitismo evita perder la mejor aptitud entre generaciones. Con tasa `1/M`, el número esperado de intentos de mutación por cromosoma es uno, aunque un reemplazo puede repetir el valor previo.
 
@@ -102,6 +100,8 @@ python src/modulo_adicional/bateria.py correr --agentes busqueda evolutivo --lim
 ```
 
 Las instancias quedan en `src/modulo_adicional/instancias/`. Los resultados individuales por agente, configuración y semilla están en [`comparacion.csv`](src/modulo_adicional/resultados/comparacion.csv). La ejecución de referencia se hizo en Windows con Python 3.12.10.
+
+No es obligatorio ejecutar la reproducción dentro de un entorno virtual porque no se requieren dependencias externas. El [README](README.md#entorno-virtual-opcional-powershell) documenta su creación opcional y el uso directo de su intérprete si PowerShell no permite activarlo. Para preservar el CSV de referencia puede usarse `comparacion_reproduccion.csv` como salida. La sección [Comprobar que la réplica terminó](README.md#comprobar-que-la-réplica-terminó) verifica el código de salida, las 72 filas y la correspondencia exacta con la rejilla. Esas comprobaciones acreditan que la batería terminó, no igualdad de tiempos o calidad con la referencia ni validación independiente de cada solución.
 
 ## Resultados
 
