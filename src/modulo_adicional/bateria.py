@@ -36,6 +36,7 @@ for ruta in (AQUI, SRC):
 
 from generador_instancias import generar, escribir
 from agente_evolutivo.agent import Params, cargar_instancia, decodificar, aptitud, evolucionar
+from searchAgent.searchAgent import Params as ParamsBusqueda, buscar, piso_teorico
 
 # --- Rejilla experimental --------------------------------------------------
 # El enunciado exige al menos tres valores de N, tres de K y tres semillas.
@@ -95,9 +96,26 @@ def correr_evolutivo(n, k, fichas, semilla, limite_seg):
         "motivo_paro": metricas.motivo_paro,
     }
 
+def correr_busqueda(n, k, fichas, semilla, limite_seg):
+    """El agente de busqueda es determinista: la semilla no altera su salida y
+    se ignora. Se conserva en la firma para que ambos agentes sean
+    intercambiables desde la bateria."""
+    nodo, metricas = buscar(n, fichas, ParamsBusqueda(limite_seg = limite_seg))
+    mayor = max(celda[1] for fila in nodo.tablero for celda in fila)
+    return {
+        "colocadas": nodo.profundidad,
+        "ocupadas": nodo.ocupadas,
+        "mayor": mayor,
+        "aptitud": nodo.profundidad * (n * n + 1) - nodo.ocupadas,
+        "tiempo": round(metricas.tiempo, 3),
+        "esfuerzo": metricas.expandidos,        # nodos expandidos
+        "termino": metricas.motivo_paro != "tiempo",
+        "motivo_paro": metricas.motivo_paro,
+    }
+
 AGENTES = {
     "evolutivo": correr_evolutivo,
-    # "busqueda": correr_busqueda,   <-- pendiente de la implementacion del agente de busqueda
+    "busqueda": correr_busqueda,
 }
 
 COLUMNAS = ["agente", "N", "K", "M", "densidad", "semilla", "colocadas", "total_fichas",
