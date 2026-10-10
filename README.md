@@ -56,7 +56,7 @@ Los comandos siguientes se ejecutan desde la raíz del repositorio.
 El punto de entrada `src/main.py` resuelve una sola instancia por ejecución. Por defecto ejecuta el agente evolutivo; `--agente busqueda` selecciona el agente de búsqueda:
 
 ```powershell
-python src/main.py --instancia src/modulo_adicional/instancias/N04_K2_s1.txt --salida salidas/solution.txt --semilla 1 --limite-segundos 10
+python src/main.py --agente evolutivo --instancia src/modulo_adicional/instancias/N04_K2_s1.txt --salida salidas/solution.txt --semilla 1 --limite-segundos 10
 python src/main.py --agente busqueda --instancia src/modulo_adicional/instancias/N04_K2_s1.txt --salida salidas/solution.txt --semilla 1 --limite-segundos 10
 ```
 
@@ -83,6 +83,12 @@ Las pruebas unitarias cubren fusiones y reglas básicas del motor. Las pruebas d
 
 ## Replicar la comparación experimental
 
+Para comparar el rendimiento de ambos agentes se elaboró una comparación experimental sobre 6 instancias con diferentes valores de `N`, `K` y `M`. Además, por cada instancia se ejecutaron 3 semillas distintas. Los comandos utilizados para realizar la comparación se encuentran en [Informe.md](/Informe.md). Para replicar estas comparaciones se pueden utilizar esos mismos comandos, teniendo en cuenta que se sobreescribiran los archivos originales documentados en el informe. 
+
+## Módulo adicional
+
+El módulo se implementó aunque no era necesario, debido a una situación con el grupo. Se mantiene la implementación como evidencia, pero no se realiza el informe ni el experimento. 
+
 La batería ejecuta **72 corridas** sobre 36 instancias reproducibles: cuatro tamaños de tablero, tres cantidades de colores y tres semillas por cada combinación de `N` y `K`. La cantidad de fichas mantiene una densidad aproximada de `1.1` fichas por celda (`M = round(1.1 × N²)`). Los valores concretos son:
 
 | `N` | `K` | `M` | Semillas |
@@ -99,7 +105,7 @@ python src/modulo_adicional/bateria.py generar
 python src/modulo_adicional/bateria.py correr --agentes busqueda evolutivo --limite 10 --salida src/modulo_adicional/resultados/comparacion.csv
 ```
 
-El generador crea los archivos `N{N}_K{K}_s{semilla}.txt` en `src/modulo_adicional/instancias/`. El corredor lee esas mismas entradas para los dos agentes y escribe una fila por agente, instancia y semilla en el CSV. Ese archivo conserva los valores individuales —incluidos tiempo, esfuerzo y motivo de parada— que sustentan los estadísticos del informe. Si se cambia la rejilla, el límite, los parámetros del agente o el equipo de ejecución, se debe volver a generar el CSV y actualizar el informe; el tiempo depende del hardware.
+El generador crea los archivos `N{N}_K{K}_s{semilla}.txt` en `src/modulo_adicional/instancias/`. El corredor lee esas mismas entradas para los dos agentes y escribe una fila por agente, instancia y semilla en el CSV. Ese archivo conserva los valores individuales (incluidos tiempo, esfuerzo y motivo de parada) que sustentan los estadísticos del informe. Si se cambia la rejilla, el límite, los parámetros del agente o el equipo de ejecución, se debe volver a generar el CSV y actualizar el informe; el tiempo depende del hardware.
 
 Para ejecutar solo uno de los agentes en todas las instancias, sustituya la lista de agentes, por ejemplo:
 
