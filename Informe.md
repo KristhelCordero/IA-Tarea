@@ -47,6 +47,10 @@ Las semillas utilizadas fueron:
 - S2 = 24
 - S3 = 99
 
+Las medidas de esfuerzo elegidas, propias de cada agente son:
+- Evolutivo: Evaluaciones de aptitud 
+- Búsqueda: Nodos expandidos
+
 ### 1ra configuración
 
 #### Comandos
@@ -57,8 +61,8 @@ python src/main.py --agente evolutivo --instancia entradas/instancia_02.txt --sa
 python src/main.py --agente busqueda --instancia entradas/instancia_02.txt --salida salidas/instancia_02_AB_S1.txt --semilla 58 --limite-segundos 10
 
 #Semilla 2
-python src/main.py --agente evolutivo --instancia src/modulo_adicional/instancias/N04_K2_s1.txt --salida salidas/instancia_02_AE_S2.txt --semilla 24 --limite-segundos 10
-python src/main.py --agente busqueda --instancia src/modulo_adicional/instancias/N04_K2_s1.txt --salida salidas/instancia_02_AB_S2.txt --semilla 24 --limite-segundos 10
+python src/main.py --agente evolutivo --instancia entradas/instancia_02.txt --salida salidas/instancia_02_AE_S2.txt --semilla 24 --limite-segundos 10
+python src/main.py --agente busqueda --instancia entradas/instancia_02.txt --salida salidas/instancia_02_AB_S2.txt --semilla 24 --limite-segundos 10
 
 
 #Semilla 3
@@ -258,8 +262,45 @@ salidas/instancia_07_AB_S3.txt
 
 ### Matriz de Resultados
 
-| Configuración | Agente | Semilla | Instancia | Cantidad de fichas colocadas | Celdas ocupadas | Tiempo de cómputo | 
-|---------------|--------|---------|----------|--------------|-----------|----------|
+| Configuración | Agente | Semilla | Instancia | Cantidad de fichas colocadas | Celdas ocupadas | Tiempo de cómputo | Medida de Esfuerzo | Esfuerzo |
+|---|-----------|----|--------------|----|---|--------|-------------------------|-|
+| 1 | evolutivo | 58 | instancia_02 | 22 | 7 | 1.193s | Evaluaciones de aptitud | 8822 |
+| 1 | búsqueda  | 58 | instancia_02 | 22 | 4 | 0.004s | Nodos expandidos | 22 |
+| 1 | evolutivo | 24 | instancia_02 | 22 | 7 | 0.821s | Evaluaciones de aptitud | 7646 |
+| 1 | búsqueda  | 24 | instancia_02 | 22 | 4 | 0.002s | Nodos expandidos | 22 |
+| 1 | evolutivo | 99 | instancia_02 | 22 | 7 | 0.746s | Evaluaciones de aptitud | 8136 |
+| 1 | búsqueda  | 99 | instancia_02 | 22 | 4 | 0.002s | Nodos expandidos | 22 |
+| 2 | evolutivo | 58 | instancia_03 | 25 | 2 | 0.613s | Evaluaciones de aptitud | 6372 |
+| 2 | búsqueda  | 58 | instancia_03 | 25 | 2 | 0.001s | Nodos expandidos | 25 |
+| 2 | evolutivo | 24 | instancia_03 | 25 | 2 | 0.343s | Evaluaciones de aptitud | 5980 |
+| 2 | búsqueda  | 24 | instancia_03 | 25 | 2 | 0.001s | Nodos expandidos | 25 |
+| 2 | evolutivo | 99 | instancia_03 | 25 | 2 | 0.527s | Evaluaciones de aptitud | 6274 |
+| 2 | búsqueda  | 99 | instancia_03 | 25 | 2 | 0.001s | Nodos expandidos | 25 |
+| 3 | evolutivo | 58 | instancia_04 | 28 | 8 | 2.747s | Evaluaciones de aptitud | 15290 |
+| 3 | búsqueda  | 58 | instancia_04 | 28 | 3 | 0.005s | Nodos expandidos | 28 |
+| 3 | evolutivo | 24 | instancia_04 | 28 | 10 | 1.251s | Evaluaciones de aptitud | 7842 |
+| 3 | búsqueda  | 24 | instancia_04 | 28 | 3 | 0.006s | Nodos expandidos | 28 |
+| 3 | evolutivo | 99 | instancia_04 | 28 | 7 | 1.280s | Evaluaciones de aptitud | 8430 |
+| 3 | búsqueda  | 99 | instancia_04 | 28 | 3 | 0.005s | Nodos expandidos | 28 |
+| 4 | evolutivo | 58 | instancia_05 | 26 | 3 | 1.098s | Evaluaciones de aptitud | 7058 |
+| 4 | búsqueda  | 58 | instancia_05 | 26 | 2 | 0.001s | Nodos expandidos | 26 |
+| 4 | evolutivo | 24 | instancia_05 | 26 | 3 | 1.012s | Evaluaciones de aptitud | 6764 |
+| 4 | búsqueda  | 24 | instancia_05 | 26 | 2 | 0.001s | Nodos expandidos | 26 |
+| 4 | evolutivo | 99 | instancia_05 | 26 | 2 | 1.006s | Evaluaciones de aptitud | 10684 |
+| 4 | búsqueda  | 99 | instancia_05 | 26 | 2 | 0.001s | Nodos expandidos | 26 |
+| 5 | evolutivo | 58 | instancia_06 | 70 | 30 | 8.915s | Evaluaciones de aptitud | 18916 |
+| 5 | búsqueda  | 58 | instancia_06 | 70 | 6 | 0.170s | Nodos expandidos | 347 |
+| 5 | evolutivo | 24 | instancia_06 | 70 | 31 | 6.110s | Evaluaciones de aptitud | 13918 |
+| 5 | búsqueda  | 24 | instancia_06 | 70 | 6 | 0.170s | Nodos expandidos | 347 |
+| 5 | evolutivo | 99 | instancia_06 | 70 | 31 | 5.885s | Evaluaciones de aptitud | 11860 |
+| 5 | búsqueda  | 99 | instancia_06 | 70 | 6 | 0.223s | Nodos expandidos | 347 |
+| 6 | evolutivo | 58 | instancia_07 | 110 | 56 | 10.050s | Evaluaciones de aptitud | 9802 |
+| 6 | búsqueda  | 58 | instancia_07 | 110 | 6 | 0.600s | Nodos expandidos | 547 |
+| 6 | evolutivo | 24 | instancia_07 | 110 | 55 | 10.001s | Evaluaciones de aptitud | 10488 |
+| 6 | búsqueda  | 24 | instancia_07 | 110 | 6 | 0.590s | Nodos expandidos | 547 |
+| 6 | evolutivo | 99 | instancia_07 | 110 | 61 | 10.003s | Evaluaciones de aptitud | 10586 |
+| 6 | búsqueda  | 99 | instancia_07 | 110 | 6 | 0.597s | Nodos expandidos | 547 |
 
 ## Conclusiones 
 
+TODO

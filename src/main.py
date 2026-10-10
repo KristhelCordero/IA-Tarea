@@ -58,10 +58,17 @@ def main(argv=None):
     _, (n, k), _, fichas = instancia
 
     if args.agente == "evolutivo":
-        resolver(n, k, fichas, random.Random(args.semilla), args.limite_segundos, path_salida=str(args.salida))
+        _, metricas = resolver(n, k, fichas, random.Random(args.semilla), args.limite_segundos, path_salida=str(args.salida))
+        medida, esfuerzo = "evaluaciones", metricas.evaluaciones
     else:
-        resolver_busqueda(n, k, fichas, random.Random(args.semilla), args.limite_segundos, path_salida=str(args.salida))
-    
+        _, metricas = resolver_busqueda(n, k, fichas, random.Random(args.semilla), args.limite_segundos, path_salida=str(args.salida))
+        medida, esfuerzo = "expandidos", metricas.expandidos
+
+    # Agrega tiempo de cómputo y esfuerzo a la línea resumen del archivo de salida
+    lineas = args.salida.read_text().splitlines()
+    lineas[-1] += f" tiempo={metricas.tiempo:.3f} esfuerzo={esfuerzo} medida={medida}"
+    args.salida.write_text("\n".join(lineas) + "\n")
+
     try:
         colocadas, total_fichas = validateFiles(args.instancia, args.salida)
     except (OSError, ValueError, IndexError) as error:
