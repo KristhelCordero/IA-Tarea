@@ -4,13 +4,15 @@ from pathlib import Path
 
 from agente_evolutivo.agent import resolver
 from game import isInputFileValid
+from searchAgent.searchAgent import resolver as resolver_busqueda
+from validator import validateFiles
 
 
 ROOT = Path(__file__).resolve().parent.parent
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Ejecuta el agente evolutivo de TileUp")
+    parser = argparse.ArgumentParser(description="Ejecuta un agente de TileUp")
     # Agrega los argumentos de línea de comandos
     # --instancia: ruta del archivo de entrada
     parser.add_argument(
@@ -36,7 +38,13 @@ def main(argv=None):
         "--limite-segundos",
         type=float,
         default=10.0,
-        help="tiempo máximo del AE en segundos (por defecto: 10)",
+        help="límite de tiempo del agente en segundos (por defecto: 10)",
+    )
+    parser.add_argument(
+        "--agente",
+        choices=("evolutivo", "busqueda"),
+        default="evolutivo",
+        help="agente a ejecutar (por defecto: evolutivo)",
     )
     args = parser.parse_args(argv)
 
@@ -48,9 +56,23 @@ def main(argv=None):
         parser.error("La instancia no existe o no tiene un formato válido")
 
     _, (n, k), _, fichas = instancia
-    resolver(n, k, fichas, random.Random(args.semilla), args.limite_segundos, path_salida=str(args.salida))
 
-    # TODO: Validar la solución generada y mostrar un mensaje de éxito o error
+    if args.agente == "evolutivo":
+        resolver(n, k, fichas, random.Random(args.semilla), args.limite_segundos, path_salida=str(args.salida))
+    else:
+        resolver_busqueda(n, k, fichas, random.Random(args.semilla), args.limite_segundos, path_salida=str(args.salida))
+    
+    try:
+        colocadas, total_fichas = validateFiles(args.instancia, args.salida)
+    except (OSError, ValueError, IndexError) as error:
+        parser.error(f"La solución generada no es válida: {error}")
+    
+    estado = "válida" if colocadas == total_fichas else "válida pero incompleta"
+        
+    print(
+        f"Validación automática: solución {estado} "
+        f"({colocadas}/{total_fichas} fichas)."
+    )
 
 
 if __name__ == "__main__":

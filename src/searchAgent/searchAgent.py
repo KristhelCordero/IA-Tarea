@@ -244,7 +244,8 @@ def resolver(n, k, fichas, rng, limite_seg, path_salida = None, params = None):
     'k' y 'rng' no se usan: el agente no necesita conocer la cantidad de colores
     y es completamente determinista, de modo que la semilla no altera su salida.
     """
-    if (params is None): params = Params()
+    if (params is None): 
+        params = Params()
     params = replace(params, limite_seg = limite_seg)
 
     nodo, metricas = buscar(n, fichas, params)

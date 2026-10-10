@@ -1,3 +1,5 @@
+import argparse
+
 from game import *
 
 def processSolution(path):
@@ -80,59 +82,74 @@ def compareSummary(summary, actions, board):
         return False
     return True
 
-def main():
-    isValid, nk, amount, tiles = isInputFileValid('..\\entradas\\instancia_01.txt')
-    if isValid == False:
-        print("Invalid file format. Please check the input file.")
-        return
-    solution, summary = processSolution('..\\salidas\\solution.txt')
+# def test(files):
+#     for file in files:
+#         print(f"Testing file: {file}")
+#         isValid, nk, amount, tiles = isInputFileValid(f'..\\testEntradas\\{file}')
+#         if isValid == False:
+#             print("Invalid file format. Please check the input file.")
+#             continue
+#         solution, summary = processSolution(f'..\\testValidator\\{file}')
+#         board = createBoard(nk[0])
+#         isValid, actions, board = validateSolution(solution, tiles, board)
+#         if not isValid:
+#             print("Solution not valid")
+#             continue
+#         print (f"Actions performed: {actions}, Summary: {summary}")
+#         if not compareSummary(summary, actions, board):
+#             print("Solution not valid")
+#             continue
+#         print("Solution Valid")
+#     return print("All tests completed.")
+
+# files = [
+#     "test_01_sin_combinaciones.txt", #Válido
+#     "test_02_combinacion_simple.txt", #Válido
+#     "test_03_tablero_lleno.txt", #Válido
+#     "test_04_combinacion_multiple.txt", #Válido 
+#     "test_05_fuera_de_rango.txt", #Invalido
+#     "test_06_celda_repetida.txt", #Invalido
+#     "test_07_combinacion_horizontal.txt", #Válido
+#     "test_08_iguales_no_adyacentes.txt", #Válido
+#     "test_09_colores_distintos_adyacentes.txt", #Válido
+#     "test_10_resumen_incorrecto.txt", #Invalido
+#     "test_11_acciones_sobrantes.txt", #Invalido
+#     "test_12_coordenada_negativa.txt", #Invalido
+#     "test_13_indice_incorrecto.txt", #Invalido
+#     "test_14_solucion_incompleta.txt", #Valido: timeout antes de colocar todas las fichas
+# ]
+
+def validateFiles(instancePath, solutionPath):
+    isValid, nk, amount, tiles = isInputFileValid(str(instancePath))
+    if not isValid:
+        raise ValueError(f"Invalid instance file: {instancePath}")
+
+    total_tiles = len(tiles)
+    solution, summary = processSolution(str(solutionPath))
     board = createBoard(nk[0])
     isValid, actions, board = validateSolution(solution, tiles, board)
     if not isValid:
-        return print("Solution not valid")
+        raise ValueError("Solution not valid")
     if not compareSummary(summary, actions, board):
-        return print("Solution not valid")
-    return print("Solution Valid")
+        raise ValueError("Solution summary does not match the simulated board")
+    return actions, total_tiles
 
-def test(files):
-    for file in files:
-        print(f"Testing file: {file}")
-        isValid, nk, amount, tiles = isInputFileValid(f'..\\testEntradas\\{file}')
-        if isValid == False:
-            print("Invalid file format. Please check the input file.")
-            continue
-        solution, summary = processSolution(f'..\\testValidator\\{file}')
-        board = createBoard(nk[0])
-        isValid, actions, board = validateSolution(solution, tiles, board)
-        if not isValid:
-            print("Solution not valid")
-            continue
-        print (f"Actions performed: {actions}, Summary: {summary}")
-        if not compareSummary(summary, actions, board):
-            print("Solution not valid")
-            continue
-        print("Solution Valid")
-    return print("All tests completed.")
+def commandLine(argv=None):
+    parser = argparse.ArgumentParser(description="Validate a TileUp solution file against an instance")
+    parser.add_argument("--instancia", required=True, help="path to the instance file")
+    parser.add_argument("--solucion", required=True, help="path to the solution file")
+    args = parser.parse_args(argv)
 
-# main()
+    try:
+        actions, totalTiles = validateFiles(args.instancia, args.solucion)
+    except (OSError, ValueError, IndexError) as error:
+        parser.error(str(error))
 
-files = [
-    "test_01_sin_combinaciones.txt", #Válido
-    "test_02_combinacion_simple.txt", #Válido
-    "test_03_tablero_lleno.txt",  #Válido
-    "test_04_combinacion_multiple.txt", #Válido 
-    "test_05_fuera_de_rango.txt", #Invalido
-    "test_06_celda_repetida.txt", #Invalido
-    "test_07_combinacion_horizontal.txt", #Válido
-    "test_08_iguales_no_adyacentes.txt", #Válido
-    "test_09_colores_distintos_adyacentes.txt", #Válido
-    "test_10_resumen_incorrecto.txt", #Invalido
-    "test_11_acciones_sobrantes.txt", #Invalido
-    "test_12_coordenada_negativa.txt", #Invalido
-    "test_13_indice_incorrecto.txt", #Invalido
-    "test_14_solucion_incompleta.txt", #Valido: timeout antes de colocar todas las fichas
-]
+    if actions < totalTiles:
+        print(f"Solution Valid (incomplete): placed {actions}/{totalTiles} tiles")
+    else:
+        print(f"Solution Valid: placed {actions}/{totalTiles} tiles")
+    return 0
 
-test(files)
-
-
+if __name__ == "__main__":
+    raise SystemExit(commandLine())
